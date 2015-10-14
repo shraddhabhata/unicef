@@ -1,0 +1,73 @@
+#-----------------------------------------------------------------------------------
+# Lambda Function to send the patient request to SQS
+#-----------------------------------------------------------------------------------
+var QUEUE_URL = 'https://sqs.us-east-1.amazonaws.com/960865899974/resourcerequest';
+var AWS = require('aws-sdk');
+var sqs = new AWS.SQS({region : 'us-east-1'});
+var http = require('https');
+
+exports.handler = function(event, context) { 
+  //Send SQS message with details of file uploaded to S3.
+  var params = {
+    MessageBody: JSON.stringify({
+     user: {
+         name: JSON.stringify(event.name)
+     },
+     requestParams: {
+         lat: JSON.stringify(event.lat),
+         long: JSON.stringify(event.long)
+     },
+     resources: JSON.stringify(event.resources)
+     }),
+    QueueUrl: QUEUE_URL
+  };
+
+  sqs.sendMessage(params, function(err,data){
+
+    if(err) {
+      console.log('error:',"Fail Send Message" + err);
+      context.done('error', "ERROR Put SQS");  // ERROR with message
+
+    }else{
+      context.done(null, {status: "success"});  // SUCCESS
+    }
+  });
+}; 
+
+#----------------------------------------------------------------------------------
+# Lambda function to send doctors based on location to SQS
+#----------------------------------------------------------------------------------
+
+var QUEUE_URL = 'https://sqs.us-east-1.amazonaws.com/960865899974/doctorlocation';
+var AWS = require('aws-sdk');
+var sqs = new AWS.SQS({region : 'us-east-1'});
+var http = require('https');
+
+exports.handler = function(event, context) { 
+  console.log(JSON.stringify(event));
+  //Send SQS message with details of file uploaded to S3.
+  var params = {
+    MessageBody: JSON.stringify({
+     user: {
+         name: JSON.stringify(event.name)
+     },
+     requestParams: {
+         lat: JSON.stringify(event.lat),
+         long: JSON.stringify(event.long)
+     }}),
+    QueueUrl: QUEUE_URL
+  };
+console.log(params);
+  sqs.sendMessage(params, function(err,data){
+
+    if(err) {
+      console.log('error:',"Fail Send Message" + err);
+      context.done('error', "ERROR Put SQS");  // ERROR with message
+
+    }else{
+
+      console.log('data:',data.MessageId);
+      context.done(null,'success');  // SUCCESS
+    }
+  });
+}; 
